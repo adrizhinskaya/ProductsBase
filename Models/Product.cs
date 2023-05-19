@@ -8,7 +8,7 @@ namespace Rest.Models
         public Guid Id { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         [Required]
         public int Count { get; set; }

@@ -1,20 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Rest.DataAccess;
 using Rest.Models;
-using System.Text.RegularExpressions;
- 
-// начальные данные
-List<Person> users = new List<Person>
-{
-    new() { Id = Guid.NewGuid().ToString(), Name = "—тул", Count = 1 },
-    new() { Id = Guid.NewGuid().ToString(), Name = "—тол", Count = 1 },
-    new() { Id = Guid.NewGuid().ToString(), Name = " ресло", Count = 1 }
-};
 
 var builder = WebApplication.CreateBuilder();
 
-builder.Services.AddDbContext<ProductContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<ProductDBContext>(options =>
+options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
@@ -31,19 +24,22 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
+
+var _dbContext = new ProductDBContext(app.Services.CreateScope().ServiceProvider.GetRequiredService<DbContextOptions<ProductDBContext>>());
+
 app.Run(async (context) =>
 {
     var response = context.Response;
     var request = context.Request;
     var path = request.Path;
 
-    if (path == "/api/users" && request.Method == "GET")
+    if ((path == "/api/products" || path == "/api/change") && request.Method == "GET")
     {
-        await GetAllPeople(response);
+        await GetAllProducts(response);
     }
-    else if (path == "/api/users" && request.Method == "PUT")
+    else if (path == "/api/products" && request.Method == "PUT")
     {
-        await UpdatePerson(response, request);
+        await UpdateProduct(response, request);
     }
     else
     {
@@ -54,26 +50,23 @@ app.Run(async (context) =>
 
 app.Run();
 
-// получение всех пользователей
-async Task GetAllPeople(HttpResponse response)
+async Task GetAllProducts(HttpResponse response)
 {
-    await response.WriteAsJsonAsync(users);
+    await response.WriteAsJsonAsync(_dbContext.Products.ToList());
 }
-async Task UpdatePerson(HttpResponse response, HttpRequest request)
+async Task UpdateProduct(HttpResponse response, HttpRequest request)
 {
     try
     {
-        // получаем данные пользовател€
-        Person? userData = await request.ReadFromJsonAsync<Person>();
-        if (userData != null)
+        Product? productData = await request.ReadFromJsonAsync<Product>();
+        if (productData != null)
         {
-            // получаем пользовател€ по id
-            var user = users.FirstOrDefault(u => u.Id == userData.Id);
-            // если пользователь найден, измен€ем его данные и отправл€ем обратно клиенту
-            if (user != null)
+            var product = _dbContext.Products.FirstOrDefault(u => u.Id == productData.Id);
+            if (product != null)
             {
-                user.Count = userData.Count;
-                await response.WriteAsJsonAsync(user);
+                product.Count = productData.Count;
+                await _dbContext.SaveChangesAsync();
+                await response.WriteAsJsonAsync(product);
             }
             else
             {
@@ -91,10 +84,4 @@ async Task UpdatePerson(HttpResponse response, HttpRequest request)
         response.StatusCode = 400;
         await response.WriteAsJsonAsync(new { message = "Ќекорректные данные" });
     }
-}
-public class Person
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public int Count { get; set; }
 }

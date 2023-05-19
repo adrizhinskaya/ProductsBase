@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rest.Models;
 
@@ -11,12 +10,10 @@ using Rest.Models;
 
 namespace Rest.Migrations
 {
-    [DbContext(typeof(ProductContext))]
-    [Migration("20230517102341_Init")]
-    partial class Init
+    [DbContext(typeof(ProductDBContext))]
+    partial class ProductDBContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

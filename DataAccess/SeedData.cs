@@ -9,9 +9,9 @@ namespace Rest.DataAccess
         {
             string[] names = new string[5] { "Стул", "Стол", "Кресло", "Диван", "Шкаф" };
 
-            using (var _context = new ProductContext(
+            using (var _context = new ProductDBContext(
                 serviceProvider.GetRequiredService<
-                    DbContextOptions<ProductContext>>()))
+                    DbContextOptions<ProductDBContext>>()))
             {
                 if (_context.Products.Any())
                 {

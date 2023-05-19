@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rest.Models
 {
-    public class ProductContext : DbContext
+    public class ProductDBContext : DbContext
     {
-        public ProductContext(DbContextOptions<ProductContext> options) : base(options)
+        public ProductDBContext(DbContextOptions<ProductDBContext> options) : base(options)
         {
 
         }

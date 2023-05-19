@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>METANIT.COM</title>
+    <title>ProductsData</title>
     <style>
         td {
             padding: 5px;
@@ -14,62 +14,74 @@
     </style>
 </head>
 <body>
-    <h2>Список пользователей</h2>
+    <h2>Список товаров</h2>
     <table>
-        <thead><tr><th>Имя</th><th>Возраст</th><th></th></tr></thead>
+        <thead><tr><th>Наименование</th><th>Количество</th><th></th></tr></thead>
         <tbody>
         </tbody>
     </table>
 
     <script>
-        // Получение всех пользователей
-        async function getUsers() {
-            // отправляет запрос и получаем ответ
-            const response = await fetch("/api/users", {
+        async function getProducts() {
+            const response = await fetch("/api/products", {
                 method: "GET",
                 headers: { "Accept": "application/json" }
             });
-            // если запрос прошел нормально
             if (response.ok === true) {
-                // получаем данные
-                const users = await response.json();
+                const products = await response.json();
                 const rows = document.querySelector("tbody");
-                // добавляем полученные элементы в таблицу
-                users.forEach(user => rows.append(row(user)));
+                products.forEach(prod => rows.append(row(prod)));
             }
         }
-        // Изменение пользователя
-        async function editUser(userId, userAge) {
-            const response = await fetch("api/users", {
+
+        async function editProduct(prodId, prodCount) {
+            const response = await fetch("/api/products", {
                 method: "PUT",
                 headers: { "Accept": "application/json", "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    id: userId,
-                    count: parseInt(userAge, 10)
+                    id: prodId,
+                    count: parseInt(prodCount, 10)
                 })
             });
             if (response.ok === true) {
-                const user = await response.json();
-                document.querySelector(`tr[data-rowid='${user.id}']`).replaceWith(row(user));
+                const prod = await response.json();
+                document.querySelector(`tr[data-rowid='${prod.id}']`).replaceWith(row(prod));
+                location.reload();
             }
             else {
                 const error = await response.json();
                 console.log(error.message);
             }
         }
-        // создание строки для таблицы
-        function row(user) {
+
+        async function changeCountValues() {
+            const response = await fetch("/api/change", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const products = await response.json();
+                products.forEach((prod) => {
+                    const tr = document.querySelector(`tr[data-rowid='${prod.id}']`);
+                    const td = tr.querySelector(`td[id='count']`);
+                    td.textContent = prod.count;
+                });
+            }
+        }
+
+        function row(prod) {
 
             const tr = document.createElement("tr");
-            tr.setAttribute("data-rowid", user.id);
+            tr.setAttribute("data-rowid", prod.id);
 
             const nameTd = document.createElement("td");
-            nameTd.append(user.name);
+            nameTd.append(prod.name);
             tr.append(nameTd);
 
-            const ageTd = document.createElement("td");
-            ageTd.append(user.count);
-            tr.append(ageTd);
+            const countTd = document.createElement("td");
+            countTd.id = "count";
+            countTd.append(prod.count);
+            tr.append(countTd);
 
             const linksTd = document.createElement("td");
 
@@ -80,7 +92,7 @@
 
             const editLink = document.createElement("button");
             editLink.append("Изменить");
-            editLink.addEventListener("click", async () => await editUser(user.id, inputCount.value));
+            editLink.addEventListener("click", async () => await editProduct(prod.id, inputCount.value));
             linksTd.append(editLink);
 
             tr.appendChild(linksTd);
@@ -88,8 +100,11 @@
             return tr;
         }
 
-        // загрузка пользователей
-        getUsers();
+        getProducts();
+
+        setInterval(() => {
+            changeCountValues();
+        }, 10000);
     </script>
 </body>
 </html>
